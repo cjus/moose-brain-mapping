@@ -4,8 +4,6 @@ import { config } from 'dotenv';
 import fs from 'fs';
 import { BrainwaveData } from './types.js';
 import { pcap } from './utils.js';
-import blessed from 'blessed';
-import contrib from 'blessed-contrib';
 import { createScreen } from './blessed-setup.js';
 
 config();
@@ -38,18 +36,12 @@ const thetaData = new Array(dataPoints).fill(0);
 const gammaData = new Array(dataPoints).fill(0);
 
 // Create blessed screen and line chart
-const { screen, grid } = createScreen();
-const line = grid.set(0, 0, 1, 1, contrib.line, {
-  style: {
-    line: "yellow",
-    text: "green",
-    baseline: "black"
-  },
-  xLabelPadding: 3,
-  xPadding: 5,
-  showLegend: true,
-  wholeNumbersOnly: false,
-  label: 'DAS - Brainwave Activity Monitor'
+const { screen, grid, line, table } = createScreen();
+
+// Add table headers
+table.setData({
+    headers: ['Band', 'AccX', 'AccY', 'AccZ', 'GyroX', 'GyroY', 'GyroZ', 'Alpha', 'Beta', 'Delta', 'Gamma', 'Theta'],
+    data: [['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']]
 });
 
 // Update chart function
@@ -61,7 +53,6 @@ function updateChart(msg: BrainwaveData): void {
   thetaData.push(msg.theta);
   gammaData.push(msg.gamma);
 
-  // Update chart data
   line.setData([
     {
       title: 'Alpha',
@@ -102,10 +93,31 @@ function updateChart(msg: BrainwaveData): void {
  * @description dump object to file
  */
 function writeFile(fileName: string, document: BrainwaveData): void {
-  const s = fs.createWriteStream(fileName, {flags: 'a'});
-  console.log(`${document.bandOn}\t${document.acc.x}\t${document.acc.y}\t${document.acc.y}\t${document.gyro.x}\t${document.gyro.y}\t${document.gyro.z}\t${document.alpha}\t${document.beta}\t${document.delta}\t${document.gamma}\t${document.theta}`);
-  s.write(`${document.bandOn}\t${document.acc.x}\t${document.acc.y}\t${document.acc.y}\t${document.gyro.x}\t${document.gyro.y}\t${document.gyro.z}\t${document.alpha}\t${document.beta}\t${document.delta}\t${document.gamma}\t${document.theta}`);
-  s.write('\r\n');
+    const s = fs.createWriteStream(fileName, {flags: 'a'});
+    
+    // Update table with current values
+    table.setData({
+        headers: ['Band', 'AccX', 'AccY', 'AccZ', 'GyroX', 'GyroY', 'GyroZ', 'Alpha', 'Beta', 'Delta', 'Gamma', 'Theta'],
+        data: [[
+            document.bandOn ? 'ON' : 'OFF',
+            document.acc.x.toFixed(2),
+            document.acc.y.toFixed(2),
+            document.acc.z.toFixed(2),
+            document.gyro.x.toFixed(2),
+            document.gyro.y.toFixed(2),
+            document.gyro.z.toFixed(2),
+            document.alpha.toFixed(2),
+            document.beta.toFixed(2),
+            document.delta.toFixed(2),
+            document.gamma.toFixed(2),
+            document.theta.toFixed(2)
+        ]]
+    });
+
+    // Write to file
+    s.write(`${document.bandOn}\t${document.acc.x}\t${document.acc.y}\t${document.acc.y}\t${document.gyro.x}\t${document.gyro.y}\t${document.gyro.z}\t${document.alpha}\t${document.beta}\t${document.delta}\t${document.gamma}\t${document.theta}\r\n`);
+    
+    screen.render();
 }
 
 /**
@@ -153,7 +165,7 @@ async function main(): Promise<void> {
     if (type.includes('gamma')) {
       msg.gamma = pcap(args[0].value);
     }
-    // writeFile('./brain_data.csv', msg);
+    writeFile('./brain_data.csv', msg);
     updateChart(msg);
   });
 
