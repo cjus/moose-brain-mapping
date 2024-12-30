@@ -1,12 +1,12 @@
+import fs from 'fs';
 import dgram from 'dgram';
+import fetch from 'node-fetch';
 import * as oscmin from 'osc-min';
 import { config } from 'dotenv';
-import fs from 'fs';
 import { BrainwaveData } from './types.js';
 import { pcap } from './utils.js';
 import { createScreen } from './blessed-setup.js';
 import { Logger } from './logger.js';
-import fetch from 'node-fetch';
 
 config();
 
@@ -54,6 +54,9 @@ let lastMovementWarning = 0; // to prevent spam warnings
 const MOVEMENT_WARNING_COOLDOWN = 2000; // 2 seconds between warnings
 let lastRelaxationState = false;
 let isFirstReading = true;
+const SAMPLE_LOG_INTERVAL = 5000; // 5 seconds
+let requestCount = 0;
+let lastRequestLog = Date.now();
 
 // Add smoothing buffers
 const SMOOTHING_WINDOW = 5;
@@ -234,6 +237,16 @@ async function main(): Promise<void> {
 
   const server = dgram.createSocket('udp4');
   server.on('message', (buffer, _rinfo) => {
+    requestCount++;
+    
+    const now = Date.now();
+    if (now - lastRequestLog >= SAMPLE_LOG_INTERVAL) {
+      const requestsPerSecond = requestCount / (SAMPLE_LOG_INTERVAL / 1000);
+      Logger.info(`Sample rate: ${requestsPerSecond.toFixed(2)} samples/second`);
+      requestCount = 0;
+      lastRequestLog = now;
+    }
+
     const message = oscmin.fromBuffer(buffer);
     const type = message.elements[0].address;
     const args = message.elements[0].args;
