@@ -45,6 +45,52 @@ table.setData({
     data: [['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']]
 });
 
+// Add these constants near the top with other constants
+const ACCELERATION_THRESHOLD = 1.8; // Higher than 1.0 to account for gravity + movement
+const GYRO_THRESHOLD = 20.0; // Much higher since gyro readings are more sensitive
+let lastMovementWarning = 0; // to prevent spam warnings
+const MOVEMENT_WARNING_COOLDOWN = 2000; // 2 seconds between warnings
+
+// Add smoothing buffers
+const SMOOTHING_WINDOW = 5;
+const accBuffer: number[] = [];
+const gyroBuffer: number[] = [];
+
+// Add this function to calculate movement magnitude
+function checkExcessiveMovement(msg: BrainwaveData): void {
+  // Calculate magnitude of acceleration and gyro vectors
+  const accMagnitude = Math.sqrt(
+    Math.pow(msg.acc.x, 2) + 
+    Math.pow(msg.acc.y, 2) + 
+    Math.pow(msg.acc.z, 2)
+  );
+  
+  const gyroMagnitude = Math.sqrt(
+    Math.pow(msg.gyro.x, 2) + 
+    Math.pow(msg.gyro.y, 2) + 
+    Math.pow(msg.gyro.z, 2)
+  );
+
+  // Add to buffers
+  accBuffer.push(accMagnitude);
+  gyroBuffer.push(gyroMagnitude);
+
+  // Keep buffer size limited
+  if (accBuffer.length > SMOOTHING_WINDOW) accBuffer.shift();
+  if (gyroBuffer.length > SMOOTHING_WINDOW) gyroBuffer.shift();
+
+  // Calculate smoothed values
+  const smoothedAcc = accBuffer.reduce((a, b) => a + b, 0) / accBuffer.length;
+  const smoothedGyro = gyroBuffer.reduce((a, b) => a + b, 0) / gyroBuffer.length;
+
+  const now = Date.now();
+  if ((smoothedAcc > ACCELERATION_THRESHOLD || smoothedGyro > GYRO_THRESHOLD) && 
+      (now - lastMovementWarning > MOVEMENT_WARNING_COOLDOWN)) {
+    Logger.warn(`Excessive head movement detected (Acc: ${smoothedAcc.toFixed(2)}, Gyro: ${smoothedGyro.toFixed(2)})`);
+    lastMovementWarning = now;
+  }
+}
+
 // Update chart function
 function updateChart(msg: BrainwaveData): void {
   [alphaData, betaData, deltaData, thetaData, gammaData].forEach(arr => arr.shift());
@@ -152,6 +198,7 @@ async function main(): Promise<void> {
         y: pcap(args[1].value),
         z: pcap(args[2].value)
       };
+      checkExcessiveMovement(msg); // Add movement check after gyro update
     }
     if (type.includes('acc')) {
       msg.acc = {
