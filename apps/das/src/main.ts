@@ -5,6 +5,7 @@ import fs from 'fs';
 import { BrainwaveData } from './types.js';
 import { pcap } from './utils.js';
 import { createScreen } from './blessed-setup.js';
+import { Logger } from './logger.js';
 
 config();
 
@@ -36,7 +37,7 @@ const thetaData = new Array(dataPoints).fill(0);
 const gammaData = new Array(dataPoints).fill(0);
 
 // Create blessed screen and line chart
-const { screen, grid, line, table } = createScreen();
+const { screen, grid, line, table, log } = createScreen();
 
 // Add table headers
 table.setData({
@@ -125,7 +126,8 @@ function writeFile(fileName: string, document: BrainwaveData): void {
  */
 async function main(): Promise<void> {
   const serviceName: string = "DAS";
-  console.log(`Starting ${serviceName} service...`);
+  Logger.initialize(log);
+  Logger.info(`Starting ${serviceName} service...`);
 
   const server = dgram.createSocket('udp4');
   server.on('message', (buffer, _rinfo) => {
@@ -134,7 +136,15 @@ async function main(): Promise<void> {
     const args = message.elements[0].args;
 
     if (type.includes('touching_forehead')) {
-      msg.bandOn = args[0].value === 1 ? true : false;
+      const newBandState = args[0].value === 1;
+      if (newBandState !== msg.bandOn) {
+        if (newBandState) {
+          Logger.info(`Band state changed from OFF to ON`);
+        } else {
+          Logger.warn(`Band state changed from ON to OFF`);
+        }
+      }
+      msg.bandOn = newBandState;
     }
     if (type.includes('gyro')) {
       msg.gyro = {
@@ -171,11 +181,11 @@ async function main(): Promise<void> {
 
   server.on('listening', () => {
     let address = server.address();
-    console.log(`server listening ${address.address}:${address.port}`);
+    Logger.info(`server listening ${address.address}:${address.port}`);
   });
 
   server.on('error', (err) => {
-    console.error('Server error:', err);
+    Logger.error(`Server error: ${err.message}`);
   });
 
   server.bind(Number(process.env.DAS_PORT) || 43134);
@@ -187,6 +197,6 @@ screen.key(['escape', 'q', 'C-c'], function(_ch: any, _key: any) {
 });
 
 main().catch((error: Error) => {
-  console.error(error);
+  Logger.error(error.message);
 });
   
