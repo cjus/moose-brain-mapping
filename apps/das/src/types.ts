@@ -1,4 +1,5 @@
 export interface BrainwaveData {
+  timestamp: Date;
   bandOn: boolean;
   acc: AccelerometerData;
   gyro: GyroscopeData;

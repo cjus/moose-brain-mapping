@@ -13,6 +13,5 @@
     },
     "rootDir": "./src",
     "outDir": "./dist",
-    "include": ["src/**/*.ts", "types/**/*"],
-
+    "include": ["src/**/*.ts", "types/**/*", "../brain-moose/app/datamodels/brain.ts"]
 }

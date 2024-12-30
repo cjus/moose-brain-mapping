@@ -1,0 +1,1 @@
+{"compilerOptions":{"outDir":"dist","plugins":[{"transform":"../node_modules/@514labs/moose-lib/dist/dataModels/toDataModels.js"}],"strict":true,"esModuleInterop":true},"include":["/Users/cjus/dev/moose-brain-mapping/apps/brainmoose/app/datamodels/models.ts"]}

@@ -6,10 +6,12 @@ import { BrainwaveData } from './types.js';
 import { pcap } from './utils.js';
 import { createScreen } from './blessed-setup.js';
 import { Logger } from './logger.js';
+import fetch from 'node-fetch';
 
 config();
 
 let msg: BrainwaveData = {
+  timestamp: new Date(),
   bandOn: false,
   acc: {
     x: 0,
@@ -144,6 +146,16 @@ function updateChart(msg: BrainwaveData): void {
 function writeFile(fileName: string, document: BrainwaveData): void {
     const s = fs.createWriteStream(fileName, {flags: 'a'});
     
+    fetch('http://localhost:4000/ingest/Brain', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(document)
+    }).catch(error => {
+        Logger.error(`Failed to send data to server: ${error.message}`);
+    });
+    
     // Check relaxation state
     const relaxationState = isRelaxedState(document);
     
@@ -225,7 +237,7 @@ async function main(): Promise<void> {
     const message = oscmin.fromBuffer(buffer);
     const type = message.elements[0].address;
     const args = message.elements[0].args;
-
+    
     if (type.includes('touching_forehead')) {
       const newBandState = args[0].value === 1;
       if (newBandState !== msg.bandOn) {
@@ -243,7 +255,7 @@ async function main(): Promise<void> {
         y: pcap(args[1].value),
         z: pcap(args[2].value)
       };
-      checkExcessiveMovement(msg); // Add movement check after gyro update
+      checkExcessiveMovement(msg);
     }
     if (type.includes('acc')) {
       msg.acc = {
@@ -267,6 +279,8 @@ async function main(): Promise<void> {
     if (type.includes('gamma')) {
       msg.gamma = pcap(args[0].value);
     }
+
+    msg.timestamp = new Date();
     writeFile('./brain_data.csv', msg);
     updateChart(msg);
   });
@@ -283,7 +297,6 @@ async function main(): Promise<void> {
   server.bind(Number(process.env.DAS_PORT) || 43134);
 }
 
-// Add this to handle exit
 screen.key(['escape', 'q', 'C-c'], function(_ch: any, _key: any) {
   return process.exit(0);
 });
