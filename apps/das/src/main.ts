@@ -50,6 +50,8 @@ const ACCELERATION_THRESHOLD = 1.8; // Higher than 1.0 to account for gravity + 
 const GYRO_THRESHOLD = 20.0; // Much higher since gyro readings are more sensitive
 let lastMovementWarning = 0; // to prevent spam warnings
 const MOVEMENT_WARNING_COOLDOWN = 2000; // 2 seconds between warnings
+let lastRelaxationState = false;
+let isFirstReading = true;
 
 // Add smoothing buffers
 const SMOOTHING_WINDOW = 5;
@@ -142,6 +144,22 @@ function updateChart(msg: BrainwaveData): void {
 function writeFile(fileName: string, document: BrainwaveData): void {
     const s = fs.createWriteStream(fileName, {flags: 'a'});
     
+    // Check relaxation state
+    const relaxationState = isRelaxedState(document);
+    
+    // Debug logging
+    Logger.info(`Debug - Current: ${relaxationState.isRelaxed}, Last: ${lastRelaxationState}, Score: ${relaxationState.score.toFixed(2)}`);
+    
+    if (document.bandOn && (isFirstReading || relaxationState.isRelaxed !== lastRelaxationState)) {
+        if (relaxationState.isRelaxed) {
+            Logger.info(`State changed to relaxed (score: ${relaxationState.score.toFixed(2)})`);
+        } else {
+            Logger.warn(`State changed to active (score: ${relaxationState.score.toFixed(2)})`);
+        }
+        lastRelaxationState = relaxationState.isRelaxed;
+        isFirstReading = false;
+    }
+    
     // Update table with current values
     table.setData({
         headers: ['Band', 'AccX', 'AccY', 'AccZ', 'GyroX', 'GyroY', 'GyroZ', 'Alpha', 'Beta', 'Delta', 'Gamma', 'Theta'],
@@ -165,6 +183,33 @@ function writeFile(fileName: string, document: BrainwaveData): void {
     s.write(`${document.bandOn}\t${document.acc.x}\t${document.acc.y}\t${document.acc.y}\t${document.gyro.x}\t${document.gyro.y}\t${document.gyro.z}\t${document.alpha}\t${document.beta}\t${document.delta}\t${document.gamma}\t${document.theta}\r\n`);
     
     screen.render();
+}
+
+function isRelaxedState(data: BrainwaveData): {isRelaxed: boolean, score: number} {
+    // Weightings for each wave type
+    const weights = {
+        alpha: 0.4,  // Alpha is most important for relaxation
+        theta: 0.3,  // Theta also indicates relaxation
+        beta: -0.2,  // High beta indicates mental activity/stress
+        gamma: -0.1  // High gamma can indicate active processing
+    };
+
+    // Calculate relaxation score (0-1)
+    const score = (
+        (data.alpha * weights.alpha) +
+        (data.theta * weights.theta) +
+        (1 - data.beta) * weights.beta +
+        (1 - data.gamma) * weights.gamma
+    );
+
+    // Normalize score to 0-1 range
+    const normalizedScore = Math.max(0, Math.min(1, score));
+    
+    // Consider relaxed if score is above 0.6
+    return {
+        isRelaxed: normalizedScore > 0.6,
+        score: normalizedScore
+    };
 }
 
 /**
