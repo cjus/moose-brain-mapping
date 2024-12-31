@@ -7,7 +7,6 @@ Moose powered Brain Mapping Demo
 
 ### Clickhouse Queries
 
-
 ```sql
 SELECT * FROM Brain_0_0
 WHERE bandOn = True and alpha > 0.4

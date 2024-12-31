@@ -1,7 +1,8 @@
 import { Key } from "@514labs/moose-lib";
 
 export interface Brain {
-    timestamp: Key<Date>;
+    sessionId: Key<string>;
+    timestamp: Date;
     bandOn: boolean;
     acc: {
         x: number;

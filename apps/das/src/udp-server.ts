@@ -3,7 +3,6 @@ import * as oscmin from 'osc-min';
 import { BrainwaveData } from './types.js';
 import { Logger } from './logger.js';
 import { pcap } from './utils.js';
-import { checkExcessiveMovement } from './brainwave-analyzer.js';
 
 export class UDPServer {
     private server!: dgram.Socket;
@@ -14,6 +13,7 @@ export class UDPServer {
 
     constructor(private onDataUpdate: (data: BrainwaveData) => void) {
         this.msg = {
+            sessionId: "",
             timestamp: new Date(),
             bandOn: false,
             acc: { x: 0, y: 0, z: 0 },

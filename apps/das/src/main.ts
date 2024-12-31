@@ -7,16 +7,30 @@ import { Logger } from './logger.js';
 import { checkExcessiveMovement, analyzeRelaxationState } from './brainwave-analyzer.js';
 import { DisplayManager } from './display-manager.js';
 import { UDPServer } from './udp-server.js';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
-config();
+config({ path: '../../.env.local' });
+
+interface Args {
+    sessionId: string;
+}
+
+const argv = yargs(hideBin(process.argv))
+    .option('sessionId', {
+        alias: 's',
+        description: 'Session identifier',
+        type: 'string',
+        default: () => Math.floor(Date.now() / 1000).toString(),
+        demandOption: false
+    })
+    .help()
+    .parse() as Args;
 
 // Create blessed screen and charts
 const { screen, line, table, log } = createScreen();
 
-table.setData({
-    headers: ['Band', 'AccX', 'AccY', 'AccZ', 'GyroX', 'GyroY', 'GyroZ', 'Alpha', 'Beta', 'Delta', 'Gamma', 'Theta'],
-    data: [['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']]
-});
+Logger.initialize(log);
 
 let lastRelaxationState = false;
 let isFirstReading = true;
@@ -28,9 +42,14 @@ const displayManager = new DisplayManager(screen, line, table);
  * @description dump object to file
  */
 function writeFile(fileName: string, document: BrainwaveData): void {
-    const s = fs.createWriteStream(fileName, {flags: 'a'});
+    const sessionFileName = `./brain_data_${argv.sessionId}.csv`;
+    const s = fs.createWriteStream(sessionFileName, {flags: 'a'});
     
-    fetch('http://localhost:4000/ingest/Brain', {
+    document.sessionId = `${argv.sessionId}`;
+    if (!process.env.MOOSE_INGEST_URL) {
+        throw new Error('MOOSE_INGEST_URL is not defined in environment variables');
+    }
+    fetch(process.env.MOOSE_INGEST_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -69,6 +88,7 @@ async function main(): Promise<void> {
     const serviceName: string = "DAS";
     Logger.initialize(log);
     Logger.info(`Starting ${serviceName} service...`);
+    Logger.info(`Session ID: ${argv.sessionId}`);
 
     const displayManager = new DisplayManager(screen, line, table);
     

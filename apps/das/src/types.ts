@@ -1,4 +1,5 @@
 export interface BrainwaveData {
+  sessionId: string;  
   timestamp: Date;
   bandOn: boolean;
   acc: AccelerometerData;

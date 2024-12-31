@@ -1,7 +1,7 @@
 import { BrainwaveData } from './types.js';
 
 // Initialize data arrays for the chart
-const dataPoints = 50;
+const dataPoints = 200;
 const alphaData = new Array(dataPoints).fill(0);
 const betaData = new Array(dataPoints).fill(0);
 const deltaData = new Array(dataPoints).fill(0);
@@ -17,15 +17,31 @@ export class DisplayManager {
         this.screen = screen;
         this.line = line;
         this.table = table;
+
+        // Adjust chart options to fit the data range
+        // this.line.options.minY = 0;
+        // this.line.options.maxY = 1.0;
+        this.line.options.numYLabels = 6;
+        this.line.options.legend.width = 8;
     }
 
     updateChart(msg: BrainwaveData): void {
+        // Update raw data arrays
         [alphaData, betaData, deltaData, thetaData, gammaData].forEach(arr => arr.shift());
         alphaData.push(msg.alpha);
         betaData.push(msg.beta);
         deltaData.push(msg.delta);
         thetaData.push(msg.theta);
         gammaData.push(msg.gamma);
+
+        // Calculate minY and maxY dynamically
+        const allData = [...alphaData, ...betaData, ...deltaData, ...thetaData, ...gammaData];
+        const minY = Math.min(...allData);
+        const maxY = Math.max(...allData);
+
+        // Update chart options
+        this.line.options.minY = minY;
+        this.line.options.maxY = maxY;
 
         this.line.setData([
             {
@@ -84,3 +100,4 @@ export class DisplayManager {
         this.screen.render();
     }
 } 
+

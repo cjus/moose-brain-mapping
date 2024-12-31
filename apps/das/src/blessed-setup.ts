@@ -13,33 +13,25 @@ export function createScreen(): ScreenComponents {
     const screen = blessed.screen();
     const grid = new contrib.grid({rows: 12, cols: 1, screen: screen});
     
-    const line = grid.set(0, 0, 4, 1, contrib.line, {
-        style: { 
-            line: "yellow", 
-            text: "green", 
-            baseline: "black" 
-        },
-        xLabelPadding: 2,
-        xPadding: 2,
-        yPadding: 2,
+    const line = grid.set(0, 0, 7, 1, contrib.line, {
         showLegend: true,
         wholeNumbersOnly: false,
-        label: 'DAS - Brainwave Activity Monitor'
+        label: 'DAS - Brainwave Activity Monitor',
     });
 
-    const table = grid.set(4, 0, 2, 1, contrib.table, {
+    const table = grid.set(7, 0, 2, 1, contrib.table, {
         keys: true,
         interactive: false,
         label: 'Raw Data',
         columnSpacing: 2,
-        columnWidth: [5, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
+        columnWidth: [5, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     });
 
-    const log = grid.set(6, 0, 6, 1, contrib.log, {
+    const log = grid.set(9, 0, 3, 1, contrib.log, {
         fg: "green",
         selectedFg: "green",
         label: 'System Log',
-        interactive: false
+        interactive: true
     });
 
     screen.on('resize', () => {
