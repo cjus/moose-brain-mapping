@@ -1,7 +1,7 @@
 import { BrainwaveData } from './types.js';
 
 // Initialize data arrays for the chart
-const dataPoints = 200;
+const dataPoints = 100;
 const alphaData = new Array(dataPoints).fill(0);
 const betaData = new Array(dataPoints).fill(0);
 const deltaData = new Array(dataPoints).fill(0);
@@ -12,15 +12,16 @@ export class DisplayManager {
     private screen: any;
     private line: any;
     private table: any;
+    private lastRenderTime: number;
+    private renderInterval: number;
 
-    constructor(screen: any, line: any, table: any) {
+    constructor(screen: any, line: any, table: any, renderInterval: number = 16) {
         this.screen = screen;
         this.line = line;
         this.table = table;
+        this.lastRenderTime = Date.now();
+        this.renderInterval = renderInterval;
 
-        // Adjust chart options to fit the data range
-        // this.line.options.minY = 0;
-        // this.line.options.maxY = 1.0;
         this.line.options.numYLabels = 6;
         this.line.options.legend.width = 8;
     }
@@ -76,7 +77,7 @@ export class DisplayManager {
             }
         ]);
 
-        this.screen.render();
+        this.renderIfNeeded();
     }
 
     updateTable(document: BrainwaveData): void {
@@ -97,7 +98,16 @@ export class DisplayManager {
                 document.theta.toFixed(2)
             ]]
         });
-        this.screen.render();
+
+        this.renderIfNeeded();
+    }
+
+    private renderIfNeeded(): void {
+        const currentTime = Date.now();
+        if (currentTime - this.lastRenderTime >= this.renderInterval) {
+            this.screen.render();
+            this.lastRenderTime = currentTime;
+        }
     }
 } 
 
