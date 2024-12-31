@@ -11,22 +11,23 @@ interface ScreenComponents {
 
 export function createScreen(): ScreenComponents {
     const screen = blessed.screen();
-    const grid = new contrib.grid({rows: 8, cols: 1, screen: screen});
+    const grid = new contrib.grid({rows: 12, cols: 1, screen: screen});
     
-    const line = grid.set(0, 0, 5, 1, contrib.line, {
+    const line = grid.set(0, 0, 4, 1, contrib.line, {
         style: { 
             line: "yellow", 
             text: "green", 
             baseline: "black" 
         },
-        xLabelPadding: 3,
-        xPadding: 5,
+        xLabelPadding: 2,
+        xPadding: 2,
+        yPadding: 2,
         showLegend: true,
         wholeNumbersOnly: false,
         label: 'DAS - Brainwave Activity Monitor'
     });
 
-    const table = grid.set(5, 0, 1, 1, contrib.table, {
+    const table = grid.set(4, 0, 2, 1, contrib.table, {
         keys: true,
         interactive: false,
         label: 'Raw Data',
@@ -34,7 +35,7 @@ export function createScreen(): ScreenComponents {
         columnWidth: [5, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
     });
 
-    const log = grid.set(6, 0, 2, 1, contrib.log, {
+    const log = grid.set(6, 0, 6, 1, contrib.log, {
         fg: "green",
         selectedFg: "green",
         label: 'System Log',
