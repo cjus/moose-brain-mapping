@@ -1,6 +1,8 @@
 # moose-brain-mapping
 Moose powered Brain Mapping Demo
 
+(i.e., a data analytics demo for your brain)
+
 ![DAS](./docs/das.png)
 
 ## Introduction
@@ -25,12 +27,12 @@ The Muse device also has accelerometer and gyroscope sensors in order to capture
 
 Those are the same sensors used in smart watches and fitness trackers. Using these sensors, we calculate movement scores for a particular session.
 
-## Database
+## Database schema and queries
 
 ```
 timestamp  DateTime('UTC')
 bandOn     Bool
-acc	       Nested(x Float64, y Float64, z Float64)	
+acc        Nested(x Float64, y Float64, z Float64)	
 gyro       Nested(x Float64, y Float64, z Float64)
 alpha      Float64
 beta	   Float64
