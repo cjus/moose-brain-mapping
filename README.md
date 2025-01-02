@@ -37,6 +37,7 @@ http://localhost:4000/consumption/sessionInsights?sessions=1735784964|Meditation
 
 The `sessions` parameter is a comma separated list of sessionId and sessionLabel pairs.
 
+See a sample response in the [`SampleAnalysis/session01.md`](SampleAnalysis/session01.md) file.
 
 ## How this demo works
 
