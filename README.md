@@ -27,6 +27,17 @@ The Muse device also has accelerometer and gyroscope sensors in order to capture
 
 Those are the same sensors used in smart watches and fitness trackers. Using these sensors, we calculate movement scores for a particular session.
 
+## Consumption API
+
+The Consumption API is a Moose API that allows you to query the movement scores for a particular session.
+
+```
+http://localhost:4000/consumption/sessionInsights?sessions=1735784964|Meditation,1735785243|Coding
+```
+
+The `sessions` parameter is a comma separated list of sessionId and sessionLabel pairs.
+
+
 ## How this demo works
 
 To allow Moose and the Muse Headband to communicate, we use a UDP Datagram Protocol (UDP) server called DAS (Data Acquisition Service) to receive UDP packets from an app that connects to the Muse Headband.
