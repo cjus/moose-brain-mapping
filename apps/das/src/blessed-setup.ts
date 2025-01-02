@@ -1,5 +1,5 @@
 import blessed from 'blessed';
-import contrib from 'blessed-contrib';
+import * as contrib from 'blessed-contrib';
 
 interface ScreenComponents {
     screen: any;
