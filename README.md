@@ -15,17 +15,25 @@ The [Muse Headband](https://choosemuse.com) is an industry leading  wearable dev
 
 <img src="./docs/museheadband.png" alt="Muse" width="300"/>
 
-To allow Moose and the Muse Headband to communicate, we use a UDP Datagram Protocol (UDP) server called DAS (Data Acquisition Service) to receive UDP packets from an app that connects to the Muse Headband.
+## OpenAI Data Analysis
 
-The DAS service (apps/das) is a Node.js application that uses the [osc-min](https://github.com/colinbdclark/osc-min) library to parse incoming UDP packets and send them via HTTP to the Moose server.
+We also support the use of OpenAI's gpt-4o model to analyze your brain data. This is optional, but it's a great way to obtain deeper insights into your brain data.
 
-Moose in-turn ingests the data and uses [RedPanda](https://redpanda.com) and the  [Clickhouse](https://clickhouse.com) database to store in-flight and resting data. 
+To enable OpenAI gpt-4o data analysis, you'll need to set the `OPENAI_API_KEY` environment variable in the moose project's `.env.local` file (which you'll need to create) located in the `apps/brainmoose` directory.  This is optional, but it's a great way to see deeper insights into your brain data.
 
 ## Demo Application in Fitness
 
 The Muse device also has accelerometer and gyroscope sensors in order to capture 3D head movement. 
 
 Those are the same sensors used in smart watches and fitness trackers. Using these sensors, we calculate movement scores for a particular session.
+
+## How this demo works
+
+To allow Moose and the Muse Headband to communicate, we use a UDP Datagram Protocol (UDP) server called DAS (Data Acquisition Service) to receive UDP packets from an app that connects to the Muse Headband.
+
+The DAS service (apps/das) is a Node.js application that uses the [osc-min](https://github.com/colinbdclark/osc-min) library to parse incoming UDP packets and send them via HTTP to the Moose server.
+
+Moose in-turn ingests the data and uses [RedPanda](https://redpanda.com) and the  [Clickhouse](https://clickhouse.com) database to store in-flight and resting data. 
 
 ## Database schema and queries
 
