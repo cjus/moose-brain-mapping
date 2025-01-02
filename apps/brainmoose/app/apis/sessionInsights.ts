@@ -5,14 +5,19 @@ import axios from "axios";
 // Load environment variables from .env.local
 config({ path: ".env.local" });
 
-const AI_PROMPT = "You are a neuroscientist analyzing brain data. You are given a set of brain data and you are to analyze it and provide a summary of the data.";
+const AI_PROMPT = `
+You are a neuroscientist analyzing brain data. When you're provided a set of brain data 
+you'll provide expert analysis in Markdown format.
+`;
 
 // This file is where you can define your API templates for consuming your data
 // All query_params are passed in as strings, and are used within the sql tag to parameterize you queries
-export interface QueryParams {}
+export interface QueryParams {
+  sessionId: string;
+}
 
 export default async function handle(
-  {}: QueryParams,
+  { sessionId }: QueryParams,
   { client, sql }: ConsumptionUtil
 ) {
   const openAIKey = process.env.OPENAI_API_KEY;
@@ -34,9 +39,9 @@ export default async function handle(
   FROM
       Brain_0_0
   WHERE
-      sessionId = '1735784964'
+      sessionId = ${sessionId}
   GROUP BY
-      sessionId;`);
+      sessionId`);
 
   const formattedData = (await queryResult.json()).map((row: any) => {
     return row;
@@ -47,7 +52,7 @@ export default async function handle(
   if (openAIKey) {  
     openAIResponse = await queryOpenAI(
       openAIKey,
-      `${AI_PROMPT}\n\n${JSON.stringify(formattedData)}`
+      `${AI_PROMPT} ${JSON.stringify(formattedData)}`
     );
   }
 
